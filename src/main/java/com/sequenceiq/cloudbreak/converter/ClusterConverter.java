@@ -6,12 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
+import com.sequenceiq.cloudbreak.controller.BadRequestException;
 import com.sequenceiq.cloudbreak.controller.json.ClusterRequest;
 import com.sequenceiq.cloudbreak.controller.json.ClusterResponse;
 import com.sequenceiq.cloudbreak.controller.json.JsonHelper;
 import com.sequenceiq.cloudbreak.domain.Cluster;
+import com.sequenceiq.cloudbreak.domain.Recipe;
 import com.sequenceiq.cloudbreak.domain.Status;
 import com.sequenceiq.cloudbreak.repository.BlueprintRepository;
+import com.sequenceiq.cloudbreak.repository.RecipeRepository;
 
 @Component
 public class ClusterConverter {
@@ -23,14 +26,29 @@ public class ClusterConverter {
     private BlueprintRepository blueprintRepository;
 
     @Autowired
+    private RecipeRepository recipeRepository;
+
+    @Autowired
     private JsonHelper jsonHelper;
 
     public Cluster convert(ClusterRequest clusterRequest) {
         Cluster cluster = new Cluster();
-        try {
-            cluster.setBlueprint(blueprintRepository.findOne(clusterRequest.getBlueprintId()));
-        } catch (AccessDeniedException e) {
-            throw new AccessDeniedException(String.format("Access to blueprint '%s' is denied or blueprint doesn't exist.", clusterRequest.getBlueprintId()), e);
+        if (clusterRequest.getBlueprintId() != null) {
+            try {
+                cluster.setBlueprint(blueprintRepository.findOne(clusterRequest.getBlueprintId()));
+            } catch (AccessDeniedException e) {
+                throw new AccessDeniedException(String.format("Access to blueprint '%s' is denied or blueprint doesn't exist.", clusterRequest.getBlueprintId()), e);
+            }
+        } else if (clusterRequest.getRecipeId() != null) {
+            try {
+                Recipe recipe = recipeRepository.findOne(clusterRequest.getRecipeId());
+                cluster.setBlueprint(recipe.getBlueprint());
+                cluster.setRecipe(recipe);
+            } catch (AccessDeniedException e) {
+                throw new AccessDeniedException(String.format("Access to recipe '%s' is denied or recipe doesn't exist.", clusterRequest.getRecipeId()), e);
+            }
+        } else {
+            throw new BadRequestException("Either a blueprint or a recipe is required to create a cluster.");
         }
         cluster.setName(clusterRequest.getName());
         cluster.setStatus(Status.REQUESTED);
@@ -56,7 +74,12 @@ public class ClusterConverter {
             clusterResponse.setMinutesUp(0);
         }
         clusterResponse.setStatusReason(cluster.getStatusReason());
-        clusterResponse.setBlueprintId(cluster.getBlueprint().getId());
+        if (cluster.getBlueprint() != null){
+            clusterResponse.setBlueprintId(cluster.getBlueprint().getId());
+        } else if (cluster.getRecipe() != null){
+            clusterResponse.setBlueprintId(cluster.getRecipe().getBlueprint().getId());
+            clusterResponse.setRecipeId(cluster.getRecipe().getId());
+        }
         clusterResponse.setDescription(cluster.getDescription() == null ? "" : cluster.getDescription());
         return clusterResponse;
     }
