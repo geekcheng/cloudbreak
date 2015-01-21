@@ -37,7 +37,8 @@ public class ClusterConverter {
             try {
                 cluster.setBlueprint(blueprintRepository.findOne(clusterRequest.getBlueprintId()));
             } catch (AccessDeniedException e) {
-                throw new AccessDeniedException(String.format("Access to blueprint '%s' is denied or blueprint doesn't exist.", clusterRequest.getBlueprintId()), e);
+                throw new AccessDeniedException(
+                        String.format("Access to blueprint '%s' is denied or blueprint doesn't exist.", clusterRequest.getBlueprintId()), e);
             }
         } else if (clusterRequest.getRecipeId() != null) {
             try {
@@ -74,9 +75,9 @@ public class ClusterConverter {
             clusterResponse.setMinutesUp(0);
         }
         clusterResponse.setStatusReason(cluster.getStatusReason());
-        if (cluster.getBlueprint() != null){
+        if (cluster.getBlueprint() != null) {
             clusterResponse.setBlueprintId(cluster.getBlueprint().getId());
-        } else if (cluster.getRecipe() != null){
+        } else if (cluster.getRecipe() != null) {
             clusterResponse.setBlueprintId(cluster.getRecipe().getBlueprint().getId());
             clusterResponse.setRecipeId(cluster.getRecipe().getId());
         }
