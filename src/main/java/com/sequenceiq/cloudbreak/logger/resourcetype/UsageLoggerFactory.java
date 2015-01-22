@@ -17,8 +17,8 @@ public class UsageLoggerFactory {
             MDC.put(LoggerContextKey.OWNER_ID.toString(), cloudbreakUsage.getOwner());
         }
         MDC.put(LoggerContextKey.RESOURCE_TYPE.toString(), LoggerResourceType.USAGE.toString());
-        if (cloudbreakUsage.getCloud() != null) {
-            MDC.put(LoggerContextKey.RESOURCE_NAME.toString(), cloudbreakUsage.getCloud());
+        if (cloudbreakUsage.getProvider() != null) {
+            MDC.put(LoggerContextKey.RESOURCE_NAME.toString(), cloudbreakUsage.getProvider());
         }
         if (cloudbreakUsage.getId() == null) {
             MDC.put(LoggerContextKey.RESOURCE_ID.toString(), "undefined");
