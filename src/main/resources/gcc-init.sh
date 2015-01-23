@@ -155,15 +155,19 @@ format_disks() {
 }
 
 main() {
-  if [[ "$1" == "::" ]]; then
-    shift
-    eval "$@"
+  if docker inspect ambari-agent &> /dev/null ; then
+    echo nothing to do;
   else
-    format_disks
-    fix_hostname
-    start_consul
-    start_ambari_server
-    start_ambari_agent
+    if [[ "$1" == "::" ]]; then
+        shift
+        eval "$@"
+    else
+        format_disks
+        fix_hostname
+        start_consul
+        start_ambari_server
+        start_ambari_agent
+    fi
   fi
 }
 
